@@ -2,7 +2,11 @@
   "name": "@redline/core",
   "version": "0.0.0",
   "private": true,
+  "type": "module",
+  "main": "./dist/index.js",
+  "types": "./dist/index.d.ts",
   "scripts": {
+    "build": "tsc",
     "test": "vitest",
     "test:run": "vitest run",
     "test:coverage": "vitest run --coverage"

@@ -2,12 +2,22 @@
   "$schema": "https://turborepo.dev/schema.json",
   "tasks": {
     "build": {
-      "inputs": ["$TURBO_DEFAULT$", ".env*"],
-      "outputs": ["dist/**", "storybook-static/**"],
-      "dependsOn": ["^build"]
+      "inputs": [
+        "$TURBO_DEFAULT$",
+        ".env*"
+      ],
+      "outputs": [
+        "dist/**",
+        "storybook-static/**"
+      ],
+      "dependsOn": [
+        "^build"
+      ]
     },
     "lint": {
-      "dependsOn": ["^lint"]
+      "dependsOn": [
+        "^lint"
+      ]
     },
     "dev": {
       "cache": false,
@@ -21,6 +31,16 @@
         "^build"
       ],
       "cache": false
+    },
+    "local-install": {
+      "dependsOn": [
+        "^build"
+      ],
+      "cache": false,
+      "inputs": [
+        "src/**/*.ts",
+        "package.json"
+      ]
     }
   }
 }

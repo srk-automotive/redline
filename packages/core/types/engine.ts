@@ -1,4 +1,5 @@
 export const ENGINE_MANUFACTURERS = [
+  "SRK",
   "BMW",
   "Mazda",
   "Skoda",
@@ -14,6 +15,17 @@ export const ENGINE_MANUFACTURERS = [
 ] as const;
 
 export type EngineManufacturer = (typeof ENGINE_MANUFACTURERS)[number];
+
+export const CYLINDER_LAYOUTS = {
+  Inline: "i",
+  "V-Layout": "V",
+  "W-Layout": "W",
+  Flat: "F",
+  Boxer: "B",
+  Rotary: "R",
+} as const;
+
+export type CylinderLayout = keyof typeof CYLINDER_LAYOUTS;
 
 export interface EngineClassInfo {
   id: string;
@@ -39,15 +51,15 @@ export const ENGINE_CLASSES = {
     label: "Modern",
     description: "Modern architecture with shared componentry (e.g., B58).",
   },
-  MOTORSPORT: {
+  SPORT: {
     id: "S",
-    label: "Motorsport",
+    label: "Sport",
     description:
       "High-performance factory tuning, often featuring ITBs and upgraded internal cooling (e.g., S65).",
   },
-  RACE: {
+  PRECISION: {
     id: "P",
-    label: "Race",
+    label: "Precision / Race",
     description:
       "Motorsport-exclusive hardware. Solid lifters, dry sumps, and ultra-high RPM capability (e.g., P65).",
   },

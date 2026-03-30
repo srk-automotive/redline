@@ -1,5 +1,6 @@
-import { Engine, EngineParams } from "./Engine";
 import {
+  CYLINDER_LAYOUTS,
+  CylinderLayout,
   ENGINE_CLASSES,
   EngineClass,
   EngineManufacturer,
@@ -7,6 +8,7 @@ import {
   FuelType,
 } from "../types/engine";
 import { InductionSystem } from "../types/induction";
+import { Engine, EngineParams } from "./Engine";
 
 export class EngineBuilder {
   private params: Partial<EngineParams> = {};
@@ -142,15 +144,18 @@ export class EngineBuilder {
     code: string,
     additionalParams: Partial<EngineParams> = {},
   ): Engine {
-    if (code.length < 5) {
+    const sanitisedCode = code.toUpperCase().replace(/-/g, ""); // Normalize code
+
+    if (sanitisedCode.length < 5) {
       throw new Error("Engine code must be at least 5 characters long");
     }
 
-    const classId = code[0];
-    const cylinderCount = parseInt(code[1]);
-    const aspirationCode = code[2];
-    const fuelCode = code[3];
-    const displacementCode = parseInt(code.slice(4)) / 10; // Convert back from *10
+    const classId = sanitisedCode[0];
+    const cylinderLayoutCode = sanitisedCode[1];
+    const cylinderCount = parseInt(sanitisedCode[2], 36);
+    const aspirationCode = sanitisedCode[3];
+    const fuelCode = sanitisedCode[4];
+    const displacementCode = parseInt(sanitisedCode.slice(5)) / 10; // Convert back from *10
 
     if (isNaN(cylinderCount) || isNaN(displacementCode)) {
       throw new Error("Invalid engine code format");
@@ -163,6 +168,15 @@ export class EngineBuilder {
     ) as EngineClass;
     if (!engineClass) {
       throw new Error(`Unknown engine class ID: ${classId}`);
+    }
+
+    const cylinderLayout = Object.keys(CYLINDER_LAYOUTS).find(
+      (key) =>
+        CYLINDER_LAYOUTS[key as keyof typeof CYLINDER_LAYOUTS].toUpperCase() ===
+        cylinderLayoutCode,
+    ) as CylinderLayout;
+    if (!cylinderLayout) {
+      throw new Error(`Unknown cylinder layout code: ${cylinderLayoutCode}`);
     }
 
     // Parse fuel type
@@ -227,8 +241,9 @@ export class EngineBuilder {
     }
 
     const params: EngineParams = {
-      manufacturer: additionalParams.manufacturer ?? "BMW", // Default fallback
+      manufacturer: additionalParams.manufacturer ?? "SRK", // Default fallback
       engineClass,
+      cylinderLayout: cylinderLayout ?? "Inline", // Default fallback
       noCylinders: cylinderCount,
       displacement: displacementCode,
       fuelType,
