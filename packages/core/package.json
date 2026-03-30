@@ -1,0 +1,16 @@
+{
+  "name": "@redline/core",
+  "version": "0.0.0",
+  "private": true,
+  "scripts": {
+    "test": "vitest",
+    "test:run": "vitest run",
+    "test:coverage": "vitest run --coverage"
+  },
+  "devDependencies": {
+    "@repo/typescript-config": "workspace:^",
+    "@vitest/coverage-v8": "^1.6.0",
+    "typescript": "5.5.4",
+    "vitest": "^1.6.0"
+  }
+}
