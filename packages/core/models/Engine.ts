@@ -58,6 +58,8 @@ export interface EngineParams {
   headMaterial?: MaterialType;
   deckDesign?: "Open" | "Closed" | "Semi-Closed";
   drySump?: boolean;
+
+  isEstimated?: boolean;
 }
 
 export class Engine {
@@ -208,21 +210,24 @@ export class Engine {
       );
     }
 
-    // Cross-validate power, torque, and maxRpm using conversion formulas
-    if (this.power && this.torque && this.maxRpm) {
+    // Cross-validate power, torque, and maxRpm using 10% relative tolerance
+    // We skip this if isEstimated is true (e.g., during Wizard mode with defaults)
+    if (!params.isEstimated && this.power && this.torque && this.maxRpm) {
       const computedHp = calculateHpFromNm(this.torque, this.maxRpm);
-      const hpTolerance = 5; // 5 hp tolerance
+      const hpTolerance = this.power * 0.1;
+
       if (Math.abs(computedHp - this.power) > hpTolerance) {
         throw new Error(
-          `Computed HP ${computedHp} from torque and RPM does not match provided power ${this.power} (tolerance: ${hpTolerance} hp)`,
+          `Power/Torque mismatch: Provided ${this.power}hp, but math at ${this.maxRpm}rpm suggests ~${computedHp.toFixed(0)}hp (+/- 10% allowed).`,
         );
       }
 
       const computedNm = calculateNmFromHp(this.power, this.maxRpm);
-      const nmTolerance = 10; // 10 Nm tolerance
+      const nmTolerance = this.torque * 0.1;
+
       if (Math.abs(computedNm - this.torque) > nmTolerance) {
         throw new Error(
-          `Computed Nm ${computedNm} from power and RPM does not match provided torque ${this.torque} (tolerance: ${nmTolerance} Nm)`,
+          `Torque/Power mismatch: Provided ${this.torque}Nm, but math at ${this.maxRpm}rpm suggests ~${computedNm.toFixed(0)}Nm.`,
         );
       }
     }
@@ -356,17 +361,30 @@ export class Engine {
   ): { power: number; torque: number; rpm: number; bmep: number } {
     const ATMOSPHERIC_PSI = 14.7;
     const workingRpm = params.maxRpm ?? this.maxRpm ?? 6000;
+    const powerRpmFactor = this.fuelType === "Diesel" ? 0.75 : 0.9;
+    const peakPowerRpm = workingRpm * powerRpmFactor;
 
+    let estPower = params.power ?? this.power;
     let estTorque = params.torque ?? this.torque;
     let estBmep: number = 0;
 
-    if (estTorque) {
+    // --- CASE 1: Power provided, Torque missing (The "Tired Engine" scaling) ---
+    if (estPower && !estTorque) {
+      estTorque = calculateNmFromHp(estPower, peakPowerRpm);
       estBmep = estTorque / (this.displacement * 7.9577);
-    } else {
-      // 1. Better Fuel Baselines
-      // Modern Diesels are high-compression and high-pressure by nature
+    }
+    // --- CASE 2: Torque provided, Power missing ---
+    else if (estTorque && !estPower) {
+      estBmep = estTorque / (this.displacement * 7.9577);
+      estPower = calculateHpFromNm(estTorque, peakPowerRpm);
+    }
+    // --- CASE 3: Both provided (Calculate BMEP for engineering context) ---
+    else if (estPower && estTorque) {
+      estBmep = estTorque / (this.displacement * 7.9577);
+    }
+    // --- CASE 4: Pure Physics Estimate (Default Baseline) ---
+    else {
       const baseBmep = this.fuelType === "Diesel" ? 16.0 : 12.5;
-
       const VE_MAP: Record<EngineClass, number> = {
         CLASSIC: 0.8,
         MODERN: 0.9,
@@ -381,9 +399,6 @@ export class Engine {
 
       if (this.induction.aspiration !== "Naturally Aspirated") {
         const chargers = (this.induction as any).chargers || [];
-
-        // Modern Diesel "Stock" assumption: ~22 psi (1.5 bar)
-        // Petrol "Stock" assumption: ~8 psi (0.5 bar)
         const defaultBoost = this.fuelType === "Diesel" ? 22 : 8;
 
         if (chargers.length === 0) {
@@ -393,8 +408,9 @@ export class Engine {
             const boost = charger.boostPressure || defaultBoost;
             if (charger.__type === "Supercharger") {
               totalBoostPsi += boost;
-              const lossFactor = charger.type === "Roots" ? 0.12 : 0.07;
-              parasiticLoss += (boost / ATMOSPHERIC_PSI) * lossFactor;
+              parasiticLoss +=
+                (boost / ATMOSPHERIC_PSI) *
+                (charger.type === "Roots" ? 0.12 : 0.07);
             } else {
               totalBoostPsi = Math.max(totalBoostPsi, boost);
             }
@@ -405,22 +421,11 @@ export class Engine {
       const pressureRatio = (ATMOSPHERIC_PSI + totalBoostPsi) / ATMOSPHERIC_PSI;
       estBmep = baseBmep * baseVE * pressureRatio * (1 - parasiticLoss);
 
-      // Diesel RPM dropoff: Apply only after the typical torque peak (2500 RPM)
       if (this.fuelType === "Diesel" && workingRpm > 2500) {
-        // Less aggressive drop-off for modern piezo-injectors
-        const dropoff = Math.max(0.6, 1 - (workingRpm - 2500) / 8000);
-        estBmep *= dropoff;
+        estBmep *= Math.max(0.6, 1 - (workingRpm - 2500) / 8000);
       }
 
       estTorque = estBmep * this.displacement * 7.9577;
-    }
-
-    let estPower = params.power ?? this.power;
-
-    if (!estPower) {
-      // B57 makes peak power around 4000-4400 RPM
-      const rpmFactor = this.fuelType === "Diesel" ? 0.8 : 0.9;
-      const peakPowerRpm = workingRpm * rpmFactor;
       estPower = calculateHpFromNm(estTorque, peakPowerRpm);
     }
 
