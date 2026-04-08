@@ -7,12 +7,13 @@
     "clean": "turbo run clean && rm -rf node_modules",
     "format": "prettier --write \"**/*.{ts,tsx,md}\"",
     "changeset": "changeset",
-    "version-packages": "changeset version",
-    "release": "turbo run build --filter=docs^... && changeset publish",
+    "version": "changeset version",
+    "release": "turbo run build && changeset version && git add . && changeset tag",
     "preview-storybook": "turbo run preview-storybook"
   },
   "devDependencies": {
     "@changesets/cli": "^2.27.1",
+    "@types/node": "^22.19.17",
     "prettier": "^3.2.5",
     "turbo": "^2.9.0"
   },

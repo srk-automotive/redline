@@ -1,6 +1,7 @@
 {
   "conventionalCommits.scopes": [
     "core",
-    "cli"
+    "cli",
+    "infra"
   ]
 }
