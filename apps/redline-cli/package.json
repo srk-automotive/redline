@@ -1,6 +1,6 @@
 {
   "name": "@redline/cli",
-  "version": "0.0.0",
+  "version": "0.0.1",
   "type": "module",
   "description": "High-revving engine fleet manager CLI",
   "bin": {
