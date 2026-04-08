@@ -1,0 +1,14 @@
+{
+  "extends": "../../packages/typescript-config/base.json",
+  "compilerOptions": {
+    "outDir": "dist",
+    "rootDir": "src",
+    /* Override base to ensure Node types are loaded for Commander/Enquirer */
+    "types": ["node"],
+    /* Keep this to 'bundler' or 'node' depending on your loader, 
+       but 'bundler' matches your core now */
+    "moduleResolution": "bundler"
+  },
+  "include": ["src/**/*.ts"],
+  "exclude": ["node_modules", "dist"]
+}

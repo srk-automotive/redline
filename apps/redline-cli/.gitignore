@@ -1,0 +1,28 @@
+# --- Node.js & Monorepo ---
+node_modules/
+.pnpm-debug.log*
+.npm
+.eslintcache
+
+# --- Build Outputs ---
+dist/
+build/
+*.tsbuildinfo
+
+# --- Development & Environment ---
+.env
+.env.local
+.env.*.local
+.DS_Store
+.vscode/
+.idea/
+*.log
+
+# --- SRK Specific ---
+# Ignore generated engine exports or local test logs
+*.engine.json
+telemetry-cache/
+
+# --- Temporary/Backup ---
+*.swp
+*~

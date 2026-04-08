@@ -5,6 +5,7 @@ export default defineConfig({
   format: ["esm"],
   clean: true,
   // minify: true,
+  tsconfig: "tsconfig.json",
   noExternal: ["@redline/core"],
   banner: {
     js: "#!/usr/bin/env node",
