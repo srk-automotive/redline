@@ -2,8 +2,20 @@
   "extends": "@repo/typescript-config/base.json",
   "compilerOptions": {
     "outDir": "dist",
-    "moduleResolution": "Node"
+    "rootDir": ".",
+    /* Modern standard for clean imports */
+    "module": "ESNext",
+    "moduleResolution": "bundler",
+    "allowImportingTsExtensions": false, 
+    
+    /* Ensure features like padStart and find are recognized */
+    "target": "ESNext",
+    "lib": ["ESNext"],
+    
+    /* Keep the noise down */
+    "skipLibCheck": true,
+    "noEmit": false
   },
   "include": ["**/*.ts"],
-  "exclude": ["node_modules", "__tests__", "dist"]
+  "exclude": ["node_modules", "__tests__", "dist", "coverage"]
 }
