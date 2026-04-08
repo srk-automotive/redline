@@ -1,13 +1,16 @@
 {
   "$schema": "https://unpkg.com/@changesets/config@2.0.0/schema.json",
-"changelog": ["@changesets/cli/changelog", { "getDependencyReleaseLine": false }],
+  "changelog": [
+    "@changesets/cli/changelog",
+    {
+      "getDependencyReleaseLine": false
+    }
+  ],
   "commit": false,
   "fixed": [],
   "linked": [],
   "access": "restricted",
   "baseBranch": "master",
   "updateInternalDependencies": "patch",
-  "ignore": [
-    "@repo/docs"
-  ]
+  "ignore": []
 }
