@@ -1,4 +1,4 @@
-# @redline/cli
+# @srk-automotive/redline-cli
 
 ## 0.0.1
 
@@ -6,4 +6,4 @@
 
 - Terraform Cloud Setup
 - Updated dependencies
-  - @redline/core@0.0.1
+  - @srk-automotive/redline-core@0.0.1

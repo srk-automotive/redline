@@ -1,4 +1,4 @@
-# @redline/core
+# @srk-automotive/redline-core
 
 ## 0.0.1
 

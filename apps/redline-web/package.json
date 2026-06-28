@@ -1,5 +1,5 @@
 {
-  "name": "@redline/web",
+  "name": "@srk-automotive/redline-web",
   "type": "module",
   "version": "0.0.1",
   "engines": {
@@ -14,7 +14,7 @@
   "dependencies": {
     "@astrojs/react": "^5.0.2",
     "@astrojs/solid-js": "^6.0.1",
-    "@redline/ui-solid": "workspace:^",
+    "@srk-automotive/redline-ui-solid": "workspace:^",
     "@tailwindcss/vite": "^4.2.2",
     "@types/react": "^19.2.14",
     "@types/react-dom": "^19.2.3",

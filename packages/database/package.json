@@ -1,0 +1,20 @@
+{
+  "name": "database",
+  "version": "0.0.0",
+  "private": true,
+  "scripts": {
+    "dev": "echo 'Add dev script here'",
+    "build": "echo 'Add build script here'",
+    "test": "echo 'Add test script here'",
+    "lint": "echo 'Add lint script here'"
+  },
+  "devDependencies": {
+    "@repo/typescript-config": "workspace:^",
+    "drizzle-kit": "^0.31.10",
+    "typescript": "^6.0.2"
+  },
+  "dependencies": {
+    "drizzle-orm": "^0.45.2",
+    "@srk-automotive/redline-types": "workspace:*"
+  }
+}

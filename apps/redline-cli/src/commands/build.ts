@@ -1,4 +1,5 @@
-import { CYLINDER_LAYOUTS, Engine, ENGINE_CLASSES, solveStroke } from "@redline/core";
+import { Engine, solveStroke } from "@srk-automotive/redline-core";
+import { CYLINDER_LAYOUTS, ENGINE_CLASSES } from "@srk-automotive/redline-types";
 import chalk from "chalk";
 
 import pkg from "enquirer";

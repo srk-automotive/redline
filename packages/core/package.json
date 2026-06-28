@@ -1,5 +1,5 @@
 {
-  "name": "@redline/core",
+  "name": "@srk-automotive/redline-core",
   "version": "0.0.1",
   "private": true,
   "type": "module",
@@ -15,6 +15,7 @@
     "@repo/typescript-config": "workspace:^",
     "@vitest/coverage-v8": "^1.6.0",
     "typescript": "5.5.4",
-    "vitest": "^1.6.0"
+    "vitest": "^1.6.0",
+    "@srk-automotive/redline-types": "workspace:*"
   }
 }

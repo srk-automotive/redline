@@ -1,4 +1,12 @@
 import {
+  calculateHpFromNm,
+  calculateNmFromHp,
+  hpToKw,
+  nmToLbFt,
+} from "../utils/units";
+import { EngineBuilder } from "./EngineBuilder";
+
+import {
   CYLINDER_LAYOUTS,
   CylinderLayout,
   ENGINE_CLASSES,
@@ -6,17 +14,11 @@ import {
   EngineManufacturer,
   FUEL_TYPES,
   FuelType,
+  getAspirationCode,
+  InductionSystem,
   LimiterInfo,
   MaterialType,
-} from "../types/engine";
-import { InductionSystem, getAspirationCode } from "../types/induction";
-import {
-  calculateHpFromNm,
-  calculateNmFromHp,
-  hpToKw,
-  nmToLbFt,
-} from "../utils/units";
-import { EngineBuilder } from "./EngineBuilder";
+} from "@srk-automotive/redline-types";
 
 const PISTON_SPEED_LIMITS: Record<EngineClass, number> = {
   CLASSIC: 20, // Older metallurgy
@@ -137,7 +139,7 @@ export class Engine {
 
     // Handle pistonSpeed: use provided or compute from maxRpm and stroke
     this.pistonSpeed =
-      params.pistonSpeed ?? (this.maxRpm && this.stroke)
+      (params.pistonSpeed ?? (this.maxRpm && this.stroke))
         ? (2 * (this.stroke / 1000) * this.maxRpm) / 60
         : undefined;
 

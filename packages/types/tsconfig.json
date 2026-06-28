@@ -1,0 +1,18 @@
+{
+  "extends": "@repo/typescript-config/base.json",
+  "compilerOptions": {
+    "rootDir": "src",
+    "outDir": "dist",
+    // Ensure we generate the type definitions for other packages to use
+    "composite": true,
+    "declaration": true,
+    "declarationMap": true,
+    // Since this is a library, we typically don't emit JS if the consumer 
+    // handles the compilation (like tsup or vite), but for safety:
+    "emitDeclarationOnly": false, 
+    "module": "ESNext",
+    "moduleResolution": "bundler"
+  },
+  "include": ["src/**/*.ts"],
+  "exclude": ["node_modules", "dist"]
+}

@@ -63,7 +63,7 @@ export const ENGINE_CLASSES = {
     description:
       "Motorsport-exclusive hardware. Solid lifters, dry sumps, and ultra-high RPM capability (e.g., P65).",
   },
-} as const;
+} as const satisfies Record<string, EngineClassInfo>;
 
 export type EngineClass = keyof typeof ENGINE_CLASSES;
 

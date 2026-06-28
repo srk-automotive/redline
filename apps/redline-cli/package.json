@@ -1,5 +1,5 @@
 {
-  "name": "@redline/cli",
+  "name": "@srk-automotive/redline-cli",
   "version": "0.0.1",
   "type": "module",
   "description": "High-revving engine fleet manager CLI",
@@ -15,7 +15,8 @@
     "local-install": "pnpm build && pnpm link --global --dir ."
   },
   "dependencies": {
-    "@redline/core": "workspace:*",
+    "@srk-automotive/redline-core": "workspace:*",
+    "@srk-automotive/redline-types": "workspace:*",
     "chalk": "^5.3.0",
     "commander": "^11.1.0",
     "enquirer": "^2.4.1"

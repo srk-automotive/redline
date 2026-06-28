@@ -6,7 +6,7 @@ export default defineConfig({
   clean: true,
   // minify: true,
   tsconfig: "tsconfig.json",
-  noExternal: ["@redline/core"],
+  noExternal: ["@srk-automotive/redline-core"],
   banner: {
     js: "#!/usr/bin/env node",
   },

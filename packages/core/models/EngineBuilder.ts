@@ -1,13 +1,4 @@
-import {
-  CYLINDER_LAYOUTS,
-  CylinderLayout,
-  ENGINE_CLASSES,
-  EngineClass,
-  EngineManufacturer,
-  FUEL_TYPES,
-  FuelType,
-} from "../types/engine";
-import { InductionSystem } from "../types/induction";
+import { CYLINDER_LAYOUTS, CylinderLayout, ENGINE_CLASSES, EngineClass, EngineManufacturer, FUEL_TYPES, FuelType, InductionSystem, LimiterInfo, MaterialType } from "@srk-automotive/redline-types";
 import { Engine, EngineParams } from "./Engine";
 
 export class EngineBuilder {
@@ -94,21 +85,21 @@ export class EngineBuilder {
   }
 
   limiters(
-    limiters: Record<number, import("../types/engine").LimiterInfo>,
+    limiters: Record<number, LimiterInfo>,
   ): EngineBuilder {
     this.params.limiters = limiters;
     return this;
   }
 
   blockMaterial(
-    material: import("../types/engine").MaterialType,
+    material: MaterialType,
   ): EngineBuilder {
     this.params.blockMaterial = material;
     return this;
   }
 
   headMaterial(
-    material: import("../types/engine").MaterialType,
+    material: MaterialType,
   ): EngineBuilder {
     this.params.headMaterial = material;
     return this;
