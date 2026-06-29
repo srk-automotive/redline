@@ -1,0 +1,227 @@
+name: codex-review-required
+
+on:
+  pull_request:
+    types: [opened, synchronize, reopened, ready_for_review, edited]
+  pull_request_target:
+    types: [opened, synchronize, reopened, ready_for_review, edited]
+  pull_request_review:
+    types: [submitted, edited, dismissed]
+  issue_comment:
+    types: [created, edited]
+
+permissions:
+  issues: read
+  pull-requests: read
+  contents: read
+
+env:
+  CODEX_BOT_LOGIN: "chatgpt-codex-connector[bot]"
+  CODEX_REVIEW_TIMEOUT_MINUTES: "20"
+  CODEX_REVIEW_POLL_INTERVAL_SECONDS: "60"
+
+jobs:
+  require-codex-review:
+    name: require-codex-review
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Verify Codex reviewed latest PR commit
+        uses: actions/github-script@v8
+        with:
+          script: |
+            const owner = context.repo.owner;
+            const repo = context.repo.repo;
+            const botLogin = process.env.CODEX_BOT_LOGIN;
+            const runStartedAt = Date.now();
+            const triggeringCommentId = context.payload.comment?.id;
+            const timeoutMinutes = Number.parseInt(
+              process.env.CODEX_REVIEW_TIMEOUT_MINUTES,
+              10,
+            );
+            const pollIntervalSeconds = Number.parseInt(
+              process.env.CODEX_REVIEW_POLL_INTERVAL_SECONDS,
+              10,
+            );
+            const timeoutMs = timeoutMinutes * 60 * 1000;
+            const pollIntervalMs = pollIntervalSeconds * 1000;
+            const deadline = Date.now() + timeoutMs;
+            const sleep = (ms) => new Promise((resolve) => setTimeout(resolve, ms));
+
+            let pull_number;
+
+            if (
+              context.eventName === "pull_request" ||
+              context.eventName === "pull_request_target" ||
+              context.eventName === "pull_request_review"
+            ) {
+              pull_number = context.payload.pull_request.number;
+            } else if (context.eventName === "issue_comment") {
+              if (!context.payload.issue.pull_request) {
+                core.info("Not a PR comment. Skipping.");
+                return;
+              }
+
+              pull_number = context.payload.issue.number;
+            }
+
+            const { data: initialPr } = await github.rest.pulls.get({
+              owner,
+              repo,
+              pull_number,
+            });
+
+            const expectedHeadSha = initialPr.head.sha;
+            const isCodexReviewBody = (body) => body.includes("Codex Review");
+            const referencesHead = (body, headSha) => {
+              return body.includes(headSha) || body.includes(headSha.slice(0, 10));
+            };
+            const isCleanReviewBody = (body) => {
+              const normalized = body.toLowerCase();
+
+              return (
+                normalized.includes("didn't find any major issues") ||
+                normalized.includes("did not find any major issues") ||
+                normalized.includes("no major issues")
+              );
+            };
+            const isFindingBody = (body) => {
+              const normalized = body.toLowerCase();
+
+              return (
+                normalized.includes("automated review suggestions") ||
+                /\bp[01]\b/i.test(body) ||
+                /\bp[01]\s+badge\b/i.test(body)
+              );
+            };
+
+            while (Date.now() <= deadline) {
+              const { data: pr } = await github.rest.pulls.get({
+                owner,
+                repo,
+                pull_number,
+              });
+
+              const headSha = pr.head.sha;
+
+              if (headSha !== expectedHeadSha) {
+                core.setFailed(
+                  `PR head changed from ${expectedHeadSha} to ${headSha}; waiting for the newer workflow run to verify Codex review.`
+                );
+                return;
+              }
+
+              const reviews = await github.paginate(github.rest.pulls.listReviews, {
+                owner,
+                repo,
+                pull_number,
+                per_page: 100,
+              });
+
+              const reviewComments = await github.paginate(
+                github.rest.pulls.listReviewComments,
+                {
+                  owner,
+                  repo,
+                  pull_number,
+                  per_page: 100,
+                },
+              );
+
+              const currentHeadReviewComments = reviewComments.filter((comment) => {
+                return (
+                  comment.user?.login === botLogin &&
+                  (comment.commit_id === headSha ||
+                    comment.original_commit_id === headSha)
+                );
+              });
+
+              if (currentHeadReviewComments.length > 0) {
+                core.setFailed(
+                  `${botLogin} left ${currentHeadReviewComments.length} finding comment(s) on latest commit ${headSha}.`
+                );
+                return;
+              }
+
+              const matchingReview = reviews
+                .slice()
+                .reverse()
+                .find((review) => {
+                  return (
+                    review.user?.login === botLogin &&
+                    review.commit_id === headSha &&
+                    review.state !== "DISMISSED"
+                  );
+                });
+
+              if (matchingReview) {
+                if (isFindingBody(matchingReview.body ?? "")) {
+                  core.setFailed(
+                    `${botLogin} submitted a review with findings for latest commit ${headSha}.`
+                  );
+                  return;
+                }
+
+                core.info(`Codex submitted a clean PR review for latest commit: ${headSha}`);
+                return;
+              }
+
+              const comments = await github.paginate(github.rest.issues.listComments, {
+                owner,
+                repo,
+                issue_number: pull_number,
+                per_page: 100,
+              });
+
+              const matchingComment = comments
+                .slice()
+                .reverse()
+                .find((comment) => {
+                  const body = comment.body ?? "";
+                  const createdAt = new Date(comment.created_at).getTime();
+                  const isFreshMarkerlessCleanComment =
+                    isCleanReviewBody(body) &&
+                    (comment.id === triggeringCommentId || createdAt >= runStartedAt);
+
+                  return (
+                    comment.user?.login === botLogin &&
+                    isCodexReviewBody(body) &&
+                    ((body.includes("Reviewed commit:") && referencesHead(body, headSha)) ||
+                      isFreshMarkerlessCleanComment)
+                  );
+                });
+
+              if (matchingComment) {
+                const body = matchingComment.body ?? "";
+
+                if (isFindingBody(body) && referencesHead(body, headSha)) {
+                  core.setFailed(
+                    `${botLogin} posted a review comment with findings for latest commit ${headSha}.`
+                  );
+                  return;
+                }
+
+                if (!isCleanReviewBody(body) && !referencesHead(body, headSha)) {
+                  core.setFailed(
+                    `${botLogin} posted a markerless Codex review comment that was not recognized as clean.`
+                  );
+                  return;
+                }
+
+                core.info(`Codex posted a clean review comment for latest commit: ${headSha}`);
+                return;
+              }
+
+              if (Date.now() + pollIntervalMs > deadline) {
+                break;
+              }
+
+              core.info(
+                `Waiting ${pollIntervalSeconds}s for ${botLogin} to review ${headSha}...`
+              );
+              await sleep(pollIntervalMs);
+            }
+
+            core.setFailed(
+              `${botLogin} did not submit a PR review for ${expectedHeadSha} within ${timeoutMinutes} minutes.`
+            );
